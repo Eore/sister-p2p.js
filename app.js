@@ -37,3 +37,18 @@ let connect = (connection1, answerDesc) => {
   let answer = new RTCSessionDescription(answerDesc);
   connection1.setRemoteDescription(answer);
 };
+
+let connectToWS = (host, id) => {
+  let ws = new WebSocket(`ws://${host}/${id}`);
+  window.onbeforeunload = () => {
+    ws.close(1000, JSON.stringify({ id }));
+  };
+  ws.onmessage = ({ data }) => {
+    console.log(data);
+  };
+  return ws;
+};
+
+let sendMessage = (wsConnection, message) => {
+  wsConnection.send(JSON.stringify(message));
+};
