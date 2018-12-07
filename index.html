@@ -10,8 +10,12 @@
   </head>
   <body>
     <iframe id="main-app" frameborder="0"></iframe>
-    <script src="app/connection.js"></script>
-    <script src="app/database.js"></script>
-    <script src="app/main.js"></script>
+    <script>
+      let mainApp = document.getElementById("main-app");
+      mainApp.src = "/component/select-node.html";
+    </script>
+    <script src="/app/connection.js"></script>
+    <script src="/app/database.js"></script>
+    <script src="/app/main.js"></script>
   </body>
 </html>
