@@ -1,41 +1,4 @@
-// let idb = window.indexedDB.open("sister-p2p", 1);
-
-// idb.onerror = () => console.log("Init db fail");
-
-// idb.onupgradeneeded = event => {
-//   let db = idb.result;
-//   db.createObjectStore("data", { keyPath: "id" }).createIndex("id", "id", {
-//     unique: true
-//   });
-//   db.createObjectStore("temp", { keyPath: "id" }).createIndex("id", "id", {
-//     unique: true
-//   });
-// };
-
-// let txDB = name => {
-//   let db = idb.result;
-//   return db.transaction(name, "readwrite").objectStore(name);
-// };
-
-// let addToTemp = ({ method, data }) => {
-//   txDB("temp").add({ id: Date.now(), method, data });
-// };
-
-// let addData = data => {
-//   txDB("data").add(data);
-// };
-
-// let getData = dbName =>
-//   new Promise((resolve, reject) => {
-//     let ret = txDB(dbName).getAll();
-//     ret.onsuccess = event => resolve(event.target.result);
-//     ret.onerror = () => reject(null);
-//   });
-
-// let cleanTemp = () => {
-//   txDB("temp").clear();
-// };
-
+// database
 let database = (() => {
   indexedDB =
     window.indexedDB ||

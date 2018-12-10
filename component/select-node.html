@@ -12,7 +12,12 @@
       <template id="list-nodes-temp">
         <li>
           {{ item }}
-          <button class="btn-select" value="{{ value }}" type="submit">
+          <button
+            class="btn-select"
+            onclick="connect(this.value)"
+            value="{{ value }}"
+            type="submit"
+          >
             Select
           </button>
         </li>
@@ -29,17 +34,21 @@
   let listNodesTemp = document.getElementById("list-nodes-temp");
 
   btnConnect.onclick = () => {
+    listNodes.innerHTML = "";
     socketServer
       .connect(
         "localhost:4444",
         txtId.value
       )
       .then(() => {
+        socketServer.
         socketServer.requestList().then(list => {
           JSON.parse(list).forEach(el => {
-            listNodes.innerHTML += listNodesTemp.innerHTML
-              .replace("{{ item }}", el)
-              .replace("{{ value }}", el);
+            if (el !== txtId.value) {
+              listNodes.innerHTML += listNodesTemp.innerHTML
+                .replace("{{ item }}", el)
+                .replace("{{ value }}", el);
+            }
           });
         });
       });

@@ -2,40 +2,42 @@ let ws = require("ws");
 let port = 4444;
 
 let listConnection = {};
-// let listDesc = [];
+
 let wsServer = new ws.Server({ port });
 wsServer.on("connection", (socket, request) => {
-  listConnection[request.url.substr(1)] = socket;
-  // console.log(listConnection);
+  let id = request.url.substr(1);
+  listConnection[id] = socket;
   socket.on("message", data => {
     let at = Date.now();
-    let { to, from, message } = JSON.parse(data);
-    console.log("Incoming :", { to: to ? to : "server", from, message, at });
-    // console.log(typeof message);
-    if (typeof message === "object") {
-      let { type } = message;
+    let { to, from, type, message } = JSON.parse(data);
+    console.log("Incoming :\n", { to, from, type, message, at });
+    if (listConnection[to] !== undefined) {
       switch (type) {
-        // case "sending":
-        //   listConnection[to].send(JSON.stringify({ from, message, at }));
-        //   break;
-
-        // case "request":
-        //   let indexAddress = Math.floor(Math.random() * listDesc.length);
-        //   socket.send(JSON.stringify(listDesc[indexAddress]));
-        //   console.log(`request [${indexAddress}] :`, listDesc[indexAddress]);
-        //   break;
-
         case "request-list":
-          socket.send(JSON.stringify(Object.keys(listConnection)));
+          socket.send(
+            JSON.stringify({
+              to: from,
+              from: "server",
+              type: "request-list",
+              message: Object.keys(listConnection),
+              at
+            }),
+            at
+          );
           break;
+
+        default:
+          listConnection[to].send(
+            JSON.stringify({ to, from, type, message, at })
+          );
       }
     } else {
-      listConnection[to].send(JSON.stringify({ from, message, at }));
+      console.log(`ID ${to} not in list`);
     }
   });
   socket.onclose = ({ reason }) => {
     let { id } = JSON.parse(reason);
     delete listConnection[id];
-    console.log(`${id} disconnected`);
+    console.log(`${new Date().toLocaleString("ID")} : ${id} disconnected`);
   };
 });

@@ -1,69 +1,14 @@
-// let createNewConnection = () => {
-//   let connection = new RTCPeerConnection(null);
-//   let uid = Date.now().toString(16);
-//   connection.ondatachannel = ({ channel }) => {
-//     let dataChannel = channel;
-//     dataChannel.onmessage = ({ data }) => {
-//       console.log(`${uid} :`, data);
-//     };
-//   };
-//   return {
-//     uid,
-//     connection
-//   };
-// };
-
-// let createDataChannel = (connection1, uid) => {
-//   return connection1.createDataChannel(uid);
-// };
-
-// let createOffer = connection1 => {
-//   return connection1.createOffer().then(offer => {
-//     connection1.setLocalDescription(offer);
-//     return offer;
-//   });
-// };
-
-// let createAnswer = (connection2, offerDesc) => {
-//   let offer = new RTCSessionDescription(offerDesc);
-//   connection2.setRemoteDescription(offer);
-//   return connection2.createAnswer().then(answer => {
-//     connection2.setLocalDescription(answer);
-//     return answer;
-//   });
-// };
-
-// let connect = (connection1, answerDesc) => {
-//   let answer = new RTCSessionDescription(answerDesc);
-//   connection1.setRemoteDescription(answer);
-// };
-
-// let connectToWS = (host, id) => {
-//   let ws = new WebSocket(`ws://${host}/${id}`);
-//   window.onbeforeunload = () => {
-//     ws.close(1000, JSON.stringify({ id }));
-//   };
-//   ws.onmessage = ({ data }) => {
-//     console.log(data);
-//   };
-//   return ws;
-// };
-
-// let sendMessage = (wsConnection, message) => {
-//   wsConnection.send(JSON.stringify(message));
-// };
-
-//p2p
+// p2p
 let p2p = (() => {
   let ret = {};
   ret.listConnection = {};
 
-  ret.newConnection = () => {
+  ret.newConnection = uid => {
     let connection = new RTCPeerConnection(null);
-    let uid = Date.now().toString(16);
+    // let uid = Date.now().toString(16);
     connection.ondatachannel = ({ channel }) => {
-      let dataChannel = channel;
-      dataChannel.onmessage = ({ data }) => {
+      ret.listConnection[uid].dataChannel = channel;
+      ret.listConnection[uid].dataChannel.onmessage = ({ data }) => {
         console.log(`${uid} :`, data);
       };
     };
@@ -72,10 +17,11 @@ let p2p = (() => {
   };
 
   ret.createDataChannel = localUid => {
-    ret.listConnection[localUid].createDataChannel(localUid);
+    let con = ret.listConnection[localUid];
+    con.dataChannel = con.createDataChannel(localUid);
   };
 
-  ret.craeteOffer = localUid => {
+  ret.createOffer = localUid => {
     let con = ret.listConnection[localUid];
     return con.createOffer().then(offer => {
       con.setLocalDescription(offer);
@@ -101,40 +47,44 @@ let p2p = (() => {
   return ret;
 })();
 
-//socket
+// socket
 let socketServer = (() => {
   let ret = {};
-  let ws = null;
+  ret.ws = null;
   ret.localId = null;
 
   ret.connect = (host, localId) =>
     new Promise(resolve => {
-      ws = new WebSocket(`ws://${host}/${localId}`);
+      ret.ws = new WebSocket(`ws://${host}/${localId}`);
       ret.localId = localId;
       window.onbeforeunload = () => {
-        ws.close(1000, JSON.stringify({ id: localId }));
+        ret.ws.close(1000, JSON.stringify({ id: localId }));
       };
-      ws.onmessage = ({ data }) => {
-        console.log(data);
-      };
-      ws.onopen = () => {
+      // ret.ws.onmessage = ({ data }) => {
+      //   console.log(data);
+      // };
+      ret.ws.onopen = () => {
         resolve();
       };
     });
 
-  ret.sendMessage = (to, message) => {
-    ws.send(JSON.stringify({ to, from: ret.localId, message }));
+  ret.sendMessage = (to, type, message) => {
+    ret.ws.send(JSON.stringify({ to, type, from: ret.localId, message }));
   };
 
-  ret.requestList = () =>
-    new Promise(resolve => {
-      ws.send(
-        JSON.stringify({ from: ret.localId, message: { type: "request-list" } })
-      );
-      ws.onmessage = ({ data }) => {
-        resolve(data);
-      };
-    });
+  ret.requestList = () => {
+    ret.ws.send(
+      JSON.stringify({ to: "server", from: ret.localId, type: "request-list" })
+    );
+  };
+  // new Promise(resolve => {
+  //   ret.ws.send(
+  //     JSON.stringify({ from: ret.localId, message: { type: "request-list" } })
+  //   );
+  //   ret.ws.onmessage = ({ data }) => {
+  //     resolve(data);
+  //   };
+  // });
 
   return ret;
 })();
